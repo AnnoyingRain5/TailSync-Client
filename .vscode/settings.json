@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "flake.lock": "json",
+        "cstring": "cpp",
+        "cstdint": "cpp"
+    }
+}
