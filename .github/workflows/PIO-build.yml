@@ -8,13 +8,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/pip
             ~/.platformio/.cache
           key: ${{ runner.os }}-pio
-          submodules: recursive
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
