@@ -1,0 +1,3 @@
+[submodule "lib/libTailSync"]
+	path = lib/libTailSync
+	url = https://github.com/annoyingRain5/libtailsync
