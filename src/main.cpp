@@ -2,11 +2,10 @@
 #include <WiFi.h>
 #include <esp_now.h>
 #include <libTailSync.h>
-namespace TS = TailSync;
 
 uint8_t Broadcast_MAC[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-void handleColourPacket(TS::ColourPacket packet) {
+void handleColourPacket(ColourPacket packet) {
   Serial.printf("[LOG]: colour! r: %d g: %d b: %d", packet.colour[0][0].red,
                 packet.colour[0][0].green, packet.colour[0][0].blue);
   Serial.printf("[LOG]: Average head colour: %d",
@@ -38,11 +37,11 @@ void setup() {
     }
   }
 
-  esp_now_register_recv_cb(TS::ParsePacket);
+  esp_now_register_recv_cb(ParsePacket);
 
   setColourCallback(handleColourPacket);
-  TS::setPulseCallback(handlePulsePacket);
-  TS::setEndSessionCallback(handleEndSessionPacket);
+  setPulseCallback(handlePulsePacket);
+  setEndSessionCallback(handleEndSessionPacket);
 }
 
 void loop() {
