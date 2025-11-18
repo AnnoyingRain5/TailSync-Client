@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 
+namespace TailSync {
 #pragma pack(1)
 struct Colour {
   uint8_t red;
@@ -18,15 +19,14 @@ struct PacketHeader {
 };
 
 #pragma pack(1)
-struct ColourPacket { 
+struct ColourPacket {
   Colour colour[8][8]; // 8x8 grid of pixels
 };
 
 struct Channel {
-  uint8_t name[32] = "";
-  uint8_t mac[6] = "";
+  uint8_t name[32] = {0};
+  uint8_t mac[6] = {0};
 };
-
 
 typedef void (*handleEndSession)();
 typedef void (*handlePulse)();
@@ -40,4 +40,5 @@ void setEndSessionCallback(handleEndSession);
 Colour AverageColour(Colour, Colour);
 Colour AverageColour(Colour, Colour, Colour, Colour);
 
-void ParsePacket(const uint8_t * mac, const uint8_t *data, int len);
+void ParsePacket(const uint8_t *mac, const uint8_t *data, int len);
+} // namespace TailSync

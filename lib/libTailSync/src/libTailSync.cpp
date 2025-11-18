@@ -1,11 +1,12 @@
-#include <cstdint>
-#include <Arduino.h>
 #include "libTailSync.h"
+#include <Arduino.h>
+#include <cstdint>
+using namespace TailSync;
 
 // user callbacks
-handleColour handleColour_ = nullptr;
-handlePulse handlePulse_ = nullptr;
-handleEndSession handleEndSession_ = nullptr;
+TailSync::handleColour handleColour_ = nullptr;
+TailSync::handlePulse handlePulse_ = nullptr;
+TailSync::handleEndSession handleEndSession_ = nullptr;
 
 Channel currentChannel;
 
@@ -15,45 +16,41 @@ uint8_t PacketHeader::getversion() const {
   return (this->version_type & 0xf0) >> 4;
 }
 
-uint8_t PacketHeader::gettype() const {
-  return this->version_type & 0x0f;
-}
+uint8_t PacketHeader::gettype() const { return this->version_type & 0x0f; }
 
-// returns true if packet is valid. Also sets currentChannel for the first packet
-bool checkPacket(PacketHeader header, const uint8_t *mac, int len){
+// returns true if packet is valid. Also sets currentChannel for the first
+// packet
+bool checkPacket(PacketHeader header, const uint8_t *mac, int len) {
   // 54 = T, 53 = S
   if (header.magic[0] != 0x54 || header.magic[1] != 0x53) {
     return false; // skip anything not matching the magic
   }
-  if (header.getversion() != 0){
-    Serial.printf("[ERROR]: Recieved seemingly valid packet with unsupported version \"%d\"", header.getversion());
+  if (header.getversion() != 0) {
+    Serial.printf("[ERROR]: Recieved seemingly valid packet with unsupported "
+                  "version \"%d\"",
+                  header.getversion());
     return false;
   }
   // if this is on a different "channel", and is not a meta packet
-  if ((memcmp(mac, currentChannel.mac, 6) != 0 && header.gettype() != 2)){
+  if ((memcmp(mac, currentChannel.mac, 6) != 0 && header.gettype() != 2)) {
     // if there is no channel selected
-    if (memcmp(currentChannel.mac, zero_mac, 6) == 0){
+    if (memcmp(currentChannel.mac, zero_mac, 6) == 0) {
       memcpy(currentChannel.mac, mac, sizeof(currentChannel.mac));
       return true;
     }
     return false;
   }
-  if (header.gettype() == 1){
+  if (header.gettype() == 1) {
     if (sizeof(PacketHeader) + sizeof(ColourPacket) != len) {
       return false;
     }
   }
-    return true;
+  return true;
 }
 
-void setColourCallback(handleColour cb){
-  handleColour_ = cb;
-}
-
-void setPulseCallback(handlePulse cb){
-  handlePulse_ = cb;
-}
-void setEndSessionCallback(handleEndSession cb){
+void setColourCallback(TailSync::handleColour cb) { handleColour_ = cb; }
+void setPulseCallback(TailSync::handlePulse cb) { handlePulse_ = cb; }
+void setEndSessionCallback(TailSync::handleEndSession cb) {
   handleEndSession_ = cb;
 }
 
@@ -74,7 +71,8 @@ Colour AverageColour(Colour c1, Colour c2, Colour c3, Colour c4) {
 }
 
 // ensures packet is valid, then calls the appropriate callback
-void ParsePacket(const uint8_t * mac, const uint8_t *data, int len) {
+void ParsePacket(const uint8_t *mac, const uint8_t *data, int len) {
+  Serial.println("got packet!");
   PacketHeader header;
   // ensure packet is at least the length of the header
   if (len < sizeof(PacketHeader)) {
@@ -83,38 +81,38 @@ void ParsePacket(const uint8_t * mac, const uint8_t *data, int len) {
   memcpy(&header, data, sizeof(header));
 
   // exit if packet is not intended for us
-  if (!checkPacket(header, mac, len)){
+  if (!checkPacket(header, mac, len)) {
     return;
   }
 
-  switch (header.gettype()){
-    // pulse
-    case 0x0: {
-      if (handlePulse_ != nullptr){
-        handlePulse_();
-      }
-      break;
+  switch (header.gettype()) {
+  // pulse
+  case 0x0: {
+    if (handlePulse_ != nullptr) {
+      handlePulse_();
     }
-    // colour
-    case 0x1: {
-      ColourPacket colourPacket;
-      const uint8_t *payload_start = data + sizeof(PacketHeader); 
-      memcpy(&colourPacket, payload_start, sizeof(ColourPacket));
-      if (handleColour_ != nullptr){
-        handleColour_(colourPacket);
-      }
-      break;
+    break;
+  }
+  // colour
+  case 0x1: {
+    ColourPacket colourPacket;
+    const uint8_t *payload_start = data + sizeof(PacketHeader);
+    memcpy(&colourPacket, payload_start, sizeof(ColourPacket));
+    if (handleColour_ != nullptr) {
+      handleColour_(colourPacket);
     }
-    // endSession
-    case 0xf: {
-      if (handleEndSession_ != nullptr){
-        handleEndSession_();
-      }
-      break;
+    break;
+  }
+  // endSession
+  case 0xf: {
+    if (handleEndSession_ != nullptr) {
+      handleEndSession_();
     }
-    default: {
-      Serial.printf("[ERROR]: Unknown PacketType %d", header.gettype());
-      break;
-    }
+    break;
+  }
+  default: {
+    Serial.printf("[ERROR]: Unknown PacketType %d", header.gettype());
+    break;
+  }
   }
 }
