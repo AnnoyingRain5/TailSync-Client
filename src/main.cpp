@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <FastLED.h>
+#include <TailSyncLogging.h>
 #include <WiFi.h>
 #include <esp_now.h>
 #include <libTailSync.h>
@@ -9,6 +10,8 @@
 uint8_t Broadcast_MAC[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 CRGB leds[LED_COUNT] = {};
+
+Logger logger = Logger("Client");
 
 void handleColourPacket(ColourPacket packet) {
   for (int i = 0; i < LED_COUNT; i++) {
@@ -20,14 +23,15 @@ void handleColourPacket(ColourPacket packet) {
   FastLED.show();
 }
 
-void handlePulsePacket() { Serial.println("[LOG]: pulse!\r\n"); }
+void handlePulsePacket() { logger.log(DEBUG, "Pulse!"); }
 
-void handleEndSessionPacket() { Serial.println("[LOG]: End session\r\n"); }
+void handleEndSessionPacket() { logger.log(DEBUG, "End session"); }
 void handleMetachange(MetaPacket packet) {
-  Serial.printf("LOG: Meta changed! Channel Name: %s DJ Name: %s, Song Name: "
-                "%s, Colour Rate: %d\r\n",
-                packet.channelName, packet.djName, packet.songName,
-                packet.colourRate);
+  logger.log(DEBUG,
+             "Meta changed! Channel Name: %s DJ Name: %s, Song Name: "
+             "%s, Colour Rate: %d\r\n",
+             packet.channelName, packet.djName, packet.songName,
+             packet.colourRate);
 }
 
 void setup() {
@@ -36,7 +40,7 @@ void setup() {
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
     while (1) {
-      Serial.println("[FATAL]: Failed to initialize ESP-NOW\r\n");
+      logger.log(FATAL, "Failed to initialize ESP-NOW");
     }
   }
 
@@ -46,7 +50,7 @@ void setup() {
   peerInfo.encrypt = false;
   if (esp_now_add_peer(&peerInfo) != ESP_OK) {
     while (1) {
-      Serial.println("[FATAL]: Failed to initialize ESP-NOW peer\r\n");
+      logger.log(FATAL, "Failed to initialize ESP-NOW peer");
     }
   }
 
