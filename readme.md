@@ -22,7 +22,7 @@ Each packet is sent using ESP-NOW, as a broadcast (recipient FF:FF:FF:FF)
 
 All packets follow this format (hex)
 
-`<0x5453 ("TS")> <4-bit version> <4-bit packetType> <content (if applicable)>`
+`<0x5453 ("TS")> <4-bit version> <4-bit packetType> <8-bit random number> <content (if applicable)>`
 
 #### Packet Types
 
@@ -39,11 +39,11 @@ F: End session (no content)
 Being the only packet with content, this packet is special! Interpreting this packet is how you are intended to colour your fursuit or accessory! 
 
 Example packet: <br>
-` (54 53) (01) (FF AA 00) (F3 A4 1A) (CA CA 06) (73 96 87) (...)`<br>
+` (54 53) (01 AF) (FF AA 00) (F3 A4 1A) (CA CA 06) (73 96 87) (...)`<br>
 `(magic) (header) (colour) (colour) (colour) (colour) (colour data repeats for 64 total pixels)`
 
 Magic: `64 54` ("TS")
-header: `01` (version 0, type 1)<br>
+header: `01 AF` (version: `0`, type: `1`, randint: `AF`)<br>
 1: red: `FF` green: `AA` blue: `00`<br>
 2: red: `F3` green: `A4` blue: `1A`<br>
 3: red: `CA` green: `CA` blue: `06`<br>
