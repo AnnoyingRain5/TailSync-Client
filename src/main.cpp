@@ -41,6 +41,24 @@ void handleMetachange(const MetaPacket &packet) {
              packet.channelName, packet.djName, packet.songName,
              packet.colourRate);
 }
+uint16_t ticks;
+bool fadeDirection = true;
+void handleUserTick() {
+  ticks++;
+  if (ticks % 256 == 0) {
+    fadeDirection = !fadeDirection;
+  }
+  if (fadeDirection) {
+    for (CRGB &led : leds) {
+      led = CRGB(ticks % 256, ticks % 256, ticks % 256);
+    }
+  } else {
+    for (CRGB &led : leds) {
+      led = CRGB(-ticks % 256, -ticks % 256, -ticks % 256);
+    }
+  }
+  FastLED.show();
+}
 
 void setup() {
   Serial.begin(921600);
@@ -66,6 +84,7 @@ void setup() {
   setPulseCallback(handlePulsePacket);
   setEndSessionCallback(handleEndSessionPacket);
   setMetaChangeCallback(handleMetachange);
+  setUserModeTickCallback(handleUserTick);
 
   CFastLED::addLeds<WS2812, 1, GRB>(leds, LED_COUNT)
       .setCorrection(TypicalLEDStrip);
