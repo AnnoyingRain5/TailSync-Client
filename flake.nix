@@ -14,6 +14,7 @@
     {
       devShells.${system}.default = pkgs.mkShell {
         packages = [
+          pkgs.bin2c
           pkgs.clang-tools
           pkgs.platformio
         ];

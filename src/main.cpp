@@ -1,11 +1,10 @@
-#define LIBTAILSYNC_USE_FASTLED // enable CRGB converter
 #include <Arduino.h>
 #include <FastLED.h>
-#include <TailSyncLogging.h>
+#include <Logging/TailSyncLogging.h>
+#include <WebConfig/TailSyncWebConfig.h>
 #include <WiFi.h>
 #include <esp_now.h>
 #include <libTailSync.h>
-
 #define LED_COUNT 10
 
 uint8_t Broadcast_MAC[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -16,13 +15,6 @@ CRGB led2[1] = {};
 Logger logger("Client");
 
 void handleColourPacket(const ColourPacket &packet) {
-  // head
-  // for (int i = 0;
-  //     i < std::min(sizeof(packet.head) / sizeof(Colour), (size_t)LED_COUNT);
-  //     i++) {
-  //  leds[i] =
-  //      CRGB{packet.head[i].red, packet.head[i].green, packet.head[i].blue};
-  //}
   leds[0] = packet.head[0];
   leds[1] = AverageColour(packet.head[0], packet.head[1]);
   leds[2] = packet.head[1];
@@ -53,16 +45,12 @@ void handleMetachange(const MetaPacket &packet) {
 void setup() {
   Serial.begin(921600);
   if (!setCpuFrequencyMhz(80)) {
-    while (true) {
-      logger.log(FATAL, "failed to set cpu clock");
-    }
+    logger.log(FATAL, "Failed to set CPU clock");
   }
   WiFiClass::mode(WIFI_STA);
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
-    while (true) {
-      logger.log(FATAL, "Failed to initialize ESP-NOW");
-    }
+    logger.log(FATAL, "Failed to initialize ESP-NOW");
   }
 
   esp_now_peer_info_t peerInfo = {};
@@ -70,13 +58,10 @@ void setup() {
   peerInfo.channel = 1;
   peerInfo.encrypt = false;
   if (esp_now_add_peer(&peerInfo) != ESP_OK) {
-    while (true) {
-      logger.log(FATAL, "Failed to initialize ESP-NOW peer");
-    }
+    logger.log(FATAL, "Failed to initialize ESP-NOW peer");
   }
-
   esp_now_register_recv_cb(ParsePacket);
-
+  initTailSync();
   setColourCallback(handleColourPacket);
   setPulseCallback(handlePulsePacket);
   setEndSessionCallback(handleEndSessionPacket);
@@ -89,6 +74,4 @@ void setup() {
   FastLED.show(); // turn the LEDs off until we get data
 }
 
-void loop() {
-  // nothing here
-}
+void loop() { tick(); }
