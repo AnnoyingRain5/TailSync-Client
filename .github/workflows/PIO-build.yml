@@ -21,7 +21,9 @@ jobs:
           python-version: '3.11'
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
-      - name: Install bin2c
-        run: apt update && apt install hxtools
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: hxtools
+          version: 1.0
       - name: Build PlatformIO Project
         run: pio run
